@@ -1,3 +1,4 @@
+package server;
 import java.io.BufferedInputStream;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
@@ -34,7 +35,7 @@ public class ServerFTP {
 				System.out.println(command);
 			switch(command)
 			{
-				case "put" : receiveFile(currentDir+"/Server/".concat("NewFile1.docx"));
+				case "put" : receiveFile(currentDir+"/src/Server/".concat("NewFile1.docx"));
 							 break;
 				case "quit" : System.out.println("Client connection closed");
 							  dataInputStream.close();

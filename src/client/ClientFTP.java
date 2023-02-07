@@ -1,3 +1,4 @@
+package client;
 import java.io.*;
 import java.net.Socket;
 import java.util.Scanner;
@@ -37,7 +38,7 @@ public class ClientFTP {
 					case  "put": 	dataOutputStream.writeUTF(splitCommand[0]);
 									System.out.println("Sending the File to the Server\n");
 									//System.out.println(currentDir+"Client/Files/".concat(splitCommand[1]));
-									sendFile(currentDir+"/Client/Files/".concat(splitCommand[1]));
+									sendFile(currentDir+"/src/client/files/".concat(splitCommand[1]));
 									break;
 					case "quit":	dataOutputStream.writeUTF(splitCommand[0]);
 									dataInputStream.close();
