@@ -30,20 +30,22 @@ public class ClientFTP {
 
 				System.out.println("Enter your command to proceed : \n");
 				usrInput = sc.nextLine();
-				String splitCommand[] = usrInput.split(" ");
+				// String splitCommand[] = usrInput.split(" ");
 				dataInputStream = new DataInputStream(socket.getInputStream());
 				dataOutputStream = new DataOutputStream(socket.getOutputStream());
-				switch(splitCommand[0])
+				switch(usrInput.split(" ")[0])
 				{
-					case  "put": 	dataOutputStream.writeUTF(splitCommand[0]);
+					case  "put": 	dataOutputStream.writeUTF(usrInput);
 									System.out.println("Sending the File to the Server\n");
 									//System.out.println(currentDir+"Client/Files/".concat(splitCommand[1]));
-									sendFile(currentDir+"/src/client/files/".concat(splitCommand[1]));
+									sendFile(currentDir+"/src/client/files/".concat(usrInput.split(" ")[1]));
 									break;
-					case "quit":	dataOutputStream.writeUTF(splitCommand[0]);
+                    case  "get":    break;
+					case "quit":	dataOutputStream.writeUTF(usrInput);
 									dataInputStream.close();
 									dataOutputStream.close();
 									break;
+
 					default : 		System.out.println("Please enter a valid command");
 									break;
 				}

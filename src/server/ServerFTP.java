@@ -33,15 +33,19 @@ public class ServerFTP {
 			{
 				command = dataInputStream.readUTF();
 				System.out.println(command);
-			switch(command)
+			switch(command.split(" ")[0])
 			{
 				case "put" : receiveFile(currentDir+"/src/Server/".concat("NewFile1.docx"));
 							 break;
+
+				case  "get": break;
+
 				case "quit" : System.out.println("Client connection closed");
 							  dataInputStream.close();
 							  dataOutputStream.close();
 							  clientSocket.close();
 							  break;
+
 				default 	: System.out.println("Valid command not found");
 							  break;
 			}	
