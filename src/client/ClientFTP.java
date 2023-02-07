@@ -68,6 +68,17 @@ public class ClientFTP {
 								   }
 								   break;
 
+					case  "cd" :   boolean bool1 = dataInputStream.readBoolean();
+								   if (bool1 == true){
+									System.out.println("Directory Changed");
+								   }
+								   else{
+									System.out.println("Not valid directory");
+								   }
+								   break;
+
+					case "delete": break;
+
 					case "quit":    dataInputStream.close();
 									dataOutputStream.close();
 									break;

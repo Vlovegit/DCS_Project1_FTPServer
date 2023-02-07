@@ -62,6 +62,11 @@ public class ServerFTP {
 							  break;
 
 				case  "cd" :  System.out.println("Changing Directory...");
+							  boolean bool1 = cd(command.split(" ")[1]);
+							  dataOutputStream.writeBoolean(bool1);
+							  break;
+
+				case "delete":System.out.println("Deleting file...");
 							  break;
 
 				default 	: System.out.println("Valid command not found");
@@ -150,5 +155,17 @@ public class ServerFTP {
 	private static boolean mkDir(String dirName){
 		File f = new File(dirName);
 		return f.mkdir();
+	}
+
+	//cd : changing directory, function starts here
+
+	private static boolean cd(String dirName){
+		File dir = new File(dirName);
+		if(dir.isDirectory()==true) {
+			System.setProperty("user.dir", dir.getAbsolutePath());
+			return true;
+		} else {
+			return false;
+		}
 	}
 }
