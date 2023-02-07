@@ -1,3 +1,4 @@
+import java.io.BufferedInputStream;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.FileOutputStream;
@@ -12,6 +13,7 @@ public class ServerFTP {
 	public static void main(String[] args)
 	{
 		// Here we define Server Socket running on port 900
+		String currentDir = System.getProperty("user.dir");
 		try (ServerSocket serverSocket
 			= new ServerSocket(900)) {
 			System.out.println(
@@ -25,11 +27,25 @@ public class ServerFTP {
 				clientSocket.getOutputStream());
 			// Here we call receiveFile define new for that
 			// file
-			receiveFile("NewFile1.docx");
-
-			dataInputStream.close();
-			dataOutputStream.close();
-			clientSocket.close();
+			String command = "";
+			while(!(command.equals("quit")))
+			{
+				command = dataInputStream.readUTF();
+				System.out.println(command);
+			switch(command)
+			{
+				case "put" : receiveFile(currentDir+"/Server/".concat("NewFile1.docx"));
+							 break;
+				case "quit" : System.out.println("Client connection closed");
+							  dataInputStream.close();
+							  dataOutputStream.close();
+							  clientSocket.close();
+							  break;
+				default 	: System.out.println("Valid command not found");
+							  break;
+			}	
+			}
+			
 		}
 		catch (Exception e) {
 			e.printStackTrace();
