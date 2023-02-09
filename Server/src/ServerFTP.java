@@ -16,8 +16,35 @@ public class ServerFTP {
 			System.out.println(
 				"Server is Starting in Port 900");
 			// Accept the Client request using accept method
-			Socket clientSocket = serverSocket.accept();
-			System.out.println("Connected");
+			while (true) {
+				Socket clientSocket = serverSocket.accept();
+				new Thread(new FTPThread(clientSocket)).start();
+			}
+		}
+		catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
+
+	
+}
+
+class FTPThread implements Runnable {
+    
+	private Socket clientSocket;
+	private static DataOutputStream dataOutputStream = null;
+	private static DataInputStream dataInputStream = null;
+    
+	public FTPThread(Socket clientSocket) {
+        this.clientSocket = clientSocket;
+		System.out.println("Connected");
+    }
+
+    @Override
+    public void run() {
+        String currentDir = System.getProperty("user.dir");
+		try {
+
 			dataInputStream = new DataInputStream(
 				clientSocket.getInputStream());
 			dataOutputStream = new DataOutputStream(
@@ -85,12 +112,18 @@ public class ServerFTP {
 							  break;
 			}	
 			}
-			
-		}
-		catch (Exception e) {
-			e.printStackTrace();
-		}
-	}
+			clientSocket.close();
+            // handle FTP request from the client here
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+            try {
+                clientSocket.close();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+    }
 
 	//put :  receive file from client, function starts here
 

@@ -106,7 +106,8 @@ public class ClientFTP {
 					default : 		System.out.println("Please enter a valid command");
 									break;
 				}
-			}			
+			}		
+			socket.close();	
 		}
 		catch (Exception e) {
 			e.printStackTrace();
