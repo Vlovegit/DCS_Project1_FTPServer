@@ -1,4 +1,3 @@
-package server;
 import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
@@ -26,17 +25,26 @@ public class ServerFTP {
 			// Here we call receiveFile define new for that
 			// file
 			String command = "";
+			boolean bool = false;
 			while(!(command.equals("quit")))
 			{
 				command = dataInputStream.readUTF();
 				System.out.println(command);
 			switch(command.split(" ")[0])
 			{
-				case "put" : receiveFile(currentDir+"/src/Server/".concat("NewFile1.docx"));
+				case "put" :if(command.split(" ")[1].contains("/"))
+							{
+								receiveFile(currentDir+"/".concat(command.split(" ")[1].substring(command.split(" ")[1].lastIndexOf('/') + 1).trim()));
+							}
+							else
+							{
+							receiveFile(currentDir+"/".concat(command.split(" ")[1]));
+							} 
 							 break;
 
 				case "get" : System.out.println("Sending the File to the Client\n");
-						     sendFile(currentDir+"/src/server/".concat(command.split(" ")[1]));	
+							 System.out.println(currentDir+"/".concat(command.split(" ")[1]));
+						     sendFile(currentDir+"/".concat(command.split(" ")[1]));	
 							 System.out.println("File Sent");
 				 			 break;
 
@@ -57,16 +65,20 @@ public class ServerFTP {
 							  break;
 
 				case "mkdir": System.out.println("Making new directory...");
-							  boolean bool = mkDir(command.split(" ")[1]);
+							  bool = mkDir(command.split(" ")[1]);
 							  dataOutputStream.writeBoolean(bool);
 							  break;
 
 				case  "cd" :  System.out.println("Changing Directory...");
-							  boolean bool1 = cd(command.split(" ")[1]);
-							  dataOutputStream.writeBoolean(bool1);
+							  bool = cd(command.split(" ")[1]);
+							  dataOutputStream.writeBoolean(bool);
+							  dataOutputStream.writeUTF(System.getProperty("user.dir"));
 							  break;
 
 				case "delete":System.out.println("Deleting file...");
+							  bool = delete(currentDir+"/".concat(command.split(" ")[1]));
+							  System.out.println(bool);
+							  dataOutputStream.writeBoolean(bool);
 							  break;
 
 				default 	: System.out.println("Valid command not found");
@@ -167,5 +179,20 @@ public class ServerFTP {
 		} else {
 			return false;
 		}
+	}
+
+	private static boolean delete(String filename){
+		File file = new File(filename);
+ 
+        if (file.delete()) 
+		{
+            System.out.println("File deleted in the server");
+			return true;
+        }
+        else 
+		{
+            System.out.println("Failed to delete the file in server");
+			return false;
+        }
 	}
 }

@@ -1,4 +1,3 @@
-package client;
 import java.io.*;
 import java.net.Socket;
 import java.util.Arrays;
@@ -16,7 +15,12 @@ public class ClientFTP {
 			String usrInput = ""; 
 			System.out.println("Welcome to our DCS Project 1\n");
 			Scanner sc = new Scanner(System.in);
-			String currentDir = System.getProperty("user.dir");
+			String currentUserDir = System.getProperty("user.dir");
+			dataInputStream = new DataInputStream(socket.getInputStream());
+			dataOutputStream = new DataOutputStream(socket.getOutputStream());
+			dataOutputStream.writeUTF("pwd");
+			String serverCurrentDir = dataInputStream.readUTF();
+
 			while(!(usrInput.equals("quit")))
 			{
 				System.out.println("\nList of available commands\n");
@@ -28,22 +32,27 @@ public class ClientFTP {
 				System.out.println("6. mkdir - Create a subdirectory in current working directory in the remote server ( mkdir <remote_directory_name> )\n");
 				System.out.println("7. pwd - Fetch present working directory in the remote server ( pwd )\n");
 				System.out.println("8. quit - Close the connection with the remote server ( quit )\n\n");
-
 				System.out.println("Enter your command to proceed : \n");
 				usrInput = sc.nextLine();
 				// String splitCommand[] = usrInput.split(" ");
-				dataInputStream = new DataInputStream(socket.getInputStream());
-				dataOutputStream = new DataOutputStream(socket.getOutputStream());
+				boolean bool = false;
 				dataOutputStream.writeUTF(usrInput);
 				switch(usrInput.split(" ")[0])
 				{
 					case  "put": 	System.out.println("Sending the File to the Server\n");
 									//System.out.println(currentDir+"Client/Files/".concat(splitCommand[1]));
-									sendFile(currentDir+"/src/client/files/".concat(usrInput.split(" ")[1]));
+									sendFile(currentUserDir+"/".concat(usrInput.split(" ")[1]));
 									break;
 
                     case  "get":    System.out.println("Fetching file from the Server");
-									receiveFile(currentDir+"/src/client/files/"+"NewFile2.docx");
+									if(usrInput.split(" ")[1].contains("/"))
+									{
+										receiveFile(usrInput.split(" ")[1].substring(usrInput.split(" ")[1].lastIndexOf('/') + 1).trim());
+									}
+									else
+									{
+										receiveFile(usrInput.split(" ")[1]);
+									}
 					                break;
 
 					case  "ls" :    String content = dataInputStream.readUTF();
@@ -54,12 +63,12 @@ public class ClientFTP {
 									}
 									break;
 
-					case  "pwd" :  String pwd = dataInputStream.readUTF();
-								   System.out.println(pwd);
+					case  "pwd" :  serverCurrentDir = dataInputStream.readUTF();
+								   System.out.println(serverCurrentDir);
 								   break;
 
-					case "mkdir" : boolean bool = dataInputStream.readBoolean();
-								//    System.out.println(bool);
+					case "mkdir" : bool = dataInputStream.readBoolean();
+								// System.out.println(bool);
 					               if (bool == true){
 									System.out.println("Directory created successfully");
 								   }
@@ -68,16 +77,27 @@ public class ClientFTP {
 								   }
 								   break;
 
-					case  "cd" :   boolean bool1 = dataInputStream.readBoolean();
-								   if (bool1 == true){
+					case  "cd" :   bool = dataInputStream.readBoolean();
+								   if (bool == true){
 									System.out.println("Directory Changed");
+									serverCurrentDir = dataInputStream.readUTF();
 								   }
 								   else{
 									System.out.println("Not valid directory");
 								   }
 								   break;
 
-					case "delete": break;
+					case "delete": 	bool = dataInputStream.readBoolean();
+									System.out.println(bool);
+									if (bool == true)
+									{
+										System.out.println("File deleted successfully");
+					   				}
+					   				else
+									{
+										System.out.println("File deletion Failed");
+					   				}
+									break;
 
 					case "quit":    dataInputStream.close();
 									dataOutputStream.close();
