@@ -1,7 +1,10 @@
 import java.io.*;
+import java.net.ConnectException;
 import java.net.Socket;
 import java.util.Arrays;
 import java.util.Scanner;
+
+import javax.lang.model.util.ElementScanner14;
 
 public class ClientFTP {
 	private static DataOutputStream dataOutputStream = null;
@@ -9,20 +12,31 @@ public class ClientFTP {
 
 	public static void main(String[] args)
 	{
-		// Create Client Socket connect to port 900
-		try (Socket socket = new Socket("localhost", 900)) 
+		// Ask host and port to connect to from user
+		
+		/*System.out.println("Enter host and port of the server to connect");
+		String host = sc.nextLine();
+		int port = sc.nextInt();*/
+		if(args.length<2)
+			{
+				System.out.println("Cannot connect to the server as localhost or post missing in the arguements");
+				System.exit(0);
+			}
+		
+		try (Socket socket = new Socket(args[0].toString(), Integer.parseInt(args[1]))) 
 		{
+			
 			String usrInput = ""; 
-			System.out.println("Welcome to our DCS Project 1\n");
-			Scanner sc = new Scanner(System.in);
+			System.out.println("Connected to the server...\n");
 			String currentUserDir = System.getProperty("user.dir");
 			dataInputStream = new DataInputStream(socket.getInputStream());
 			dataOutputStream = new DataOutputStream(socket.getOutputStream());
 			dataOutputStream.writeUTF("pwd");
 			String serverCurrentDir = dataInputStream.readUTF();
-
-			while(!(usrInput.equals("quit")))
+			Scanner sc = new Scanner(System.in);
+			do
 			{
+				/*
 				System.out.println("\nList of available commands\n");
 				System.out.println("1. get - Fetch remote file from remote server ( get <remote_filename> )\n");
 				System.out.println("2. put - Send local file to remote server ( put <local_filename> )\n");
@@ -32,7 +46,8 @@ public class ClientFTP {
 				System.out.println("6. mkdir - Create a subdirectory in current working directory in the remote server ( mkdir <remote_directory_name> )\n");
 				System.out.println("7. pwd - Fetch present working directory in the remote server ( pwd )\n");
 				System.out.println("8. quit - Close the connection with the remote server ( quit )\n\n");
-				System.out.println("Enter your command to proceed : \n");
+				System.out.println("Enter your command to proceed : \n");*/
+				System.out.print("mytftp>");
 				usrInput = sc.nextLine();
 				// String splitCommand[] = usrInput.split(" ");
 				boolean bool = false;
@@ -45,13 +60,15 @@ public class ClientFTP {
 									break;
 
                     case  "get":    System.out.println("Fetching file from the Server");
-									if(usrInput.split(" ")[1].contains("/"))
+									receiveFile(usrInput.split(" ")[1]);
+									bool = dataInputStream.readBoolean();
+									if(bool)
 									{
-										receiveFile(usrInput.split(" ")[1].substring(usrInput.split(" ")[1].lastIndexOf('/') + 1).trim());
+										System.out.println("File Received Successfully");
 									}
-									else
+									else  
 									{
-										receiveFile(usrInput.split(" ")[1]);
+										System.out.println("Failed to Receive File");
 									}
 					                break;
 
@@ -95,7 +112,7 @@ public class ClientFTP {
 					   				}
 					   				else
 									{
-										System.out.println("File deletion Failed");
+										System.out.println("File deletion Unsuccessful. File does not exist in the server");
 					   				}
 									break;
 
@@ -106,8 +123,12 @@ public class ClientFTP {
 					default : 		System.out.println("Please enter a valid command");
 									break;
 				}
-			}		
+			}while(!(usrInput.equals("quit")));	
 			socket.close();	
+		}
+		catch(ConnectException ce)
+		{
+			System.out.println("Cannot connect to server. The host or port provided is incorrect. Please check and try again");
 		}
 		catch (Exception e) {
 			e.printStackTrace();
@@ -139,12 +160,14 @@ public class ClientFTP {
 	private static void receiveFile(String fileName)
 		throws Exception
 	{
+		if(fileName.contains("/"))
+			{
+				fileName = fileName.substring(fileName.lastIndexOf('/') + 1).trim();
+			}
 		int bytes = 0;
-		FileOutputStream fileOutputStream
-			= new FileOutputStream(fileName);
+		FileOutputStream fileOutputStream = new FileOutputStream(fileName);
 
-		long size
-			= dataInputStream.readLong(); // read file size
+		long size = dataInputStream.readLong(); // read file size
 		byte[] buffer = new byte[4 * 1024];
 		while (size > 0
 			&& (bytes = dataInputStream.read(

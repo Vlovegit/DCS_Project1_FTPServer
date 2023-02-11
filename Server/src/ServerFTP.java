@@ -6,6 +6,7 @@ public class ServerFTP {
 
 	private static DataOutputStream dataOutputStream = null;
 	private static DataInputStream dataInputStream = null;
+	public static String initServerDir = System.getProperty("user.dir");
 
 	public static void main(String[] args)
 	{
@@ -16,35 +17,8 @@ public class ServerFTP {
 			System.out.println(
 				"Server is Starting in Port 900");
 			// Accept the Client request using accept method
-			while (true) {
-				Socket clientSocket = serverSocket.accept();
-				new Thread(new FTPThread(clientSocket)).start();
-			}
-		}
-		catch (Exception e) {
-			e.printStackTrace();
-		}
-	}
-
-	
-}
-
-class FTPThread implements Runnable {
-    
-	private Socket clientSocket;
-	private static DataOutputStream dataOutputStream = null;
-	private static DataInputStream dataInputStream = null;
-    
-	public FTPThread(Socket clientSocket) {
-        this.clientSocket = clientSocket;
-		System.out.println("Connected");
-    }
-
-    @Override
-    public void run() {
-        String currentDir = System.getProperty("user.dir");
-		try {
-
+			Socket clientSocket = serverSocket.accept();
+			System.out.println("Connected");
 			dataInputStream = new DataInputStream(
 				clientSocket.getInputStream());
 			dataOutputStream = new DataOutputStream(
@@ -71,9 +45,17 @@ class FTPThread implements Runnable {
 
 				case "get" : System.out.println("Sending the File to the Client\n");
 							 System.out.println(currentDir+"/".concat(command.split(" ")[1]));
-						     sendFile(currentDir+"/".concat(command.split(" ")[1]));	
-							 System.out.println("File Sent");
-				 			 break;
+							 bool = sendFile(currentDir+"/".concat(command.split(" ")[1]));
+							 if(bool)
+							 {
+								System.out.println("File Sent Successfully");
+							 }
+							 else
+							 {
+								System.out.println("File Sending Failed");
+							 }
+							 dataOutputStream.writeBoolean(bool);
+							 break; 
 
 				case "quit" : System.out.println("Client connection closed");
 							  dataInputStream.close();
@@ -97,10 +79,18 @@ class FTPThread implements Runnable {
 							  break;
 
 				case  "cd" :  System.out.println("Changing Directory...");
-							  bool = cd(command.split(" ")[1]);
-							  dataOutputStream.writeBoolean(bool);
-							  dataOutputStream.writeUTF(System.getProperty("user.dir"));
-							  break;
+							 if(command.split(" ").length==1)
+							 {
+								System.setProperty("user.dir", initServerDir);
+								dataOutputStream.writeBoolean(true);
+								dataOutputStream.writeUTF(getPWD());
+							 }
+							 else{
+								bool = cd(command.split(" ")[1]);
+								dataOutputStream.writeBoolean(bool);
+								dataOutputStream.writeUTF(getPWD());
+							 }	 
+							 break;
 
 				case "delete":System.out.println("Deleting file...");
 							  bool = delete(currentDir+"/".concat(command.split(" ")[1]));
@@ -112,18 +102,12 @@ class FTPThread implements Runnable {
 							  break;
 			}	
 			}
-			clientSocket.close();
-            // handle FTP request from the client here
-        } catch (Exception e) {
-            e.printStackTrace();
-        } finally {
-            try {
-                clientSocket.close();
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-        }
-    }
+			
+		}
+		catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
 
 	//put :  receive file from client, function starts here
 
@@ -153,9 +137,11 @@ class FTPThread implements Runnable {
 
 	//get : sending file to client, function starts here
 
-	private static void sendFile(String path) throws Exception
+	private static boolean sendFile(String path) throws Exception
 	{
 		int bytes = 0;
+		try
+		{
 		File file = new File(path);
 		FileInputStream fileInputStream = new FileInputStream(file);
 
@@ -171,6 +157,13 @@ class FTPThread implements Runnable {
 		}
 		// close the file here
 		fileInputStream.close();
+		return true;
+		}
+		catch(FileNotFoundException fnfe)
+		{
+			System.out.println("File does not exist in the server");
+			return false;
+		}
 	}
 
 	//ls : list current directory content, function starts here
@@ -205,12 +198,22 @@ class FTPThread implements Runnable {
 	//cd : changing directory, function starts here
 
 	private static boolean cd(String dirName){
-		File dir = new File(dirName);
-		if(dir.isDirectory()==true) {
-			System.setProperty("user.dir", dir.getAbsolutePath());
+		
+		if(dirName.equals(".."))
+		{
+			//System.out.println(currThreadDir.substring(0, currThreadDir.lastIndexOf('/')).trim());
+			System.setProperty("user.dir", getPWD().substring(0, getPWD().lastIndexOf('/')).trim());
 			return true;
-		} else {
-			return false;
+		}
+		else
+		{
+			File dir = new File(dirName);
+			if(dir.isDirectory()==true) {
+				System.setProperty("user.dir", dir.getAbsolutePath());
+				return true;
+			} else {
+				return false;
+			}
 		}
 	}
 
