@@ -148,7 +148,7 @@ public class ClientFTP {
 		try{
 		File file = new File(path);
 		FileInputStream fileInputStream = new FileInputStream(file);
-
+		dataOutputStream.writeUTF("Pass");
 		// Here we send the File to Server
 		dataOutputStream.writeLong(file.length());
 		// Here we break file into chunks
@@ -159,6 +159,7 @@ public class ClientFTP {
 		dataOutputStream.write(buffer, 0, bytes);
 			dataOutputStream.flush();
 		}
+		
 		// close the file here
 		fileInputStream.close();
 	}catch(FileNotFoundException e){

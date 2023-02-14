@@ -29,7 +29,7 @@ public class ServerFTP {
 			boolean bool = false;
 			while(!(command.equals("quit")))
 			{
-				command = dataInputStream.readUTF();
+				try{command = dataInputStream.readUTF();}catch(EOFException eof){System.out.println("End of file");} //TODO change
 				System.out.println(command);
 			switch(command.split(" ")[0])
 			{
