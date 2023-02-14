@@ -88,7 +88,11 @@ public class ServerFTP {
 							 else{
 								bool = cd(command.split(" ")[1]);
 								dataOutputStream.writeBoolean(bool);
-								dataOutputStream.writeUTF(getPWD());
+								if(bool){
+									dataOutputStream.writeUTF(getPWD());
+								}
+								
+								
 							 }	 
 							 break;
 
@@ -115,6 +119,10 @@ public class ServerFTP {
 		throws Exception
 	{
 		int bytes = 0;
+		if (dataInputStream.readUTF().equals("Fail")){
+			System.out.println("File does not exist at server");
+			return;
+		}
 		FileOutputStream fileOutputStream
 			= new FileOutputStream(fileName);
 
@@ -144,24 +152,26 @@ public class ServerFTP {
 		{
 		File file = new File(path);
 		FileInputStream fileInputStream = new FileInputStream(file);
-
-		// Here we send the File to Server
+        dataOutputStream.writeUTF("Pass");
+		// Here we send the File to Client
 		dataOutputStream.writeLong(file.length());
 		// Here we break file into chunks
 		byte[] buffer = new byte[4 * 1024];
 		while ((bytes = fileInputStream.read(buffer))
 			!= -1) {
-		// Send the file to Server Socket
+		// Send the file to Client Socket
 		dataOutputStream.write(buffer, 0, bytes);
 			dataOutputStream.flush();
 		}
 		// close the file here
+
 		fileInputStream.close();
 		return true;
 		}
 		catch(FileNotFoundException fnfe)
 		{
 			System.out.println("File does not exist in the server");
+			dataOutputStream.writeUTF("Fail");
 			return false;
 		}
 	}
@@ -177,8 +187,16 @@ public class ServerFTP {
             System.out.println(child);
 			sb.append(child).append(",");
         }
+		System.out.println("length:"+sb.length());
+		if (sb.length() == 0){
+			System.out.println("No file in present directory");
+			return "No file in present directory";
+		}
+		else{
+			return sb.deleteCharAt(sb.length() - 1).toString();
+		}
 
-		return sb.deleteCharAt(sb.length() - 1).toString();
+		
 	}
 
 	//pwd : present working directory, function starts here
@@ -201,9 +219,19 @@ public class ServerFTP {
 		
 		if(dirName.equals(".."))
 		{
-			//System.out.println(currThreadDir.substring(0, currThreadDir.lastIndexOf('/')).trim());
-			System.setProperty("user.dir", getPWD().substring(0, getPWD().lastIndexOf('/')).trim());
-			return true;
+			
+			if(initServerDir.equals(getPWD())){
+				System.out.println("Already in home directory");
+				
+				return true;
+
+			}
+			else{
+				//System.out.println(currThreadDir.substring(0, currThreadDir.lastIndexOf('/')).trim());
+				System.setProperty("user.dir", getPWD().substring(0, getPWD().lastIndexOf('/')).trim());
+				return true;
+			}
+			
 		}
 		else
 		{

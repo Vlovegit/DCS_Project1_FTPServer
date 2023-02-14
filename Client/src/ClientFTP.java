@@ -4,7 +4,6 @@ import java.net.Socket;
 import java.util.Arrays;
 import java.util.Scanner;
 
-import javax.lang.model.util.ElementScanner14;
 
 public class ClientFTP {
 	private static DataOutputStream dataOutputStream = null;
@@ -62,13 +61,16 @@ public class ClientFTP {
                     case  "get":    System.out.println("Fetching file from the Server");
 									receiveFile(usrInput.split(" ")[1]);
 									bool = dataInputStream.readBoolean();
+									// System.out.println(bool);
 									if(bool)
 									{
+										
 										System.out.println("File Received Successfully");
 									}
 									else  
 									{
 										System.out.println("Failed to Receive File");
+										
 									}
 					                break;
 
@@ -96,8 +98,12 @@ public class ClientFTP {
 
 					case  "cd" :   bool = dataInputStream.readBoolean();
 								   if (bool == true){
-									System.out.println("Directory Changed");
-									serverCurrentDir = dataInputStream.readUTF();
+									
+									
+										System.out.println("Directory Changed");
+										serverCurrentDir = dataInputStream.readUTF();
+									
+									
 								   }
 								   else{
 									System.out.println("Not valid directory");
@@ -139,6 +145,7 @@ public class ClientFTP {
 	private static void sendFile(String path) throws Exception
 	{
 		int bytes = 0;
+		try{
 		File file = new File(path);
 		FileInputStream fileInputStream = new FileInputStream(file);
 
@@ -154,6 +161,11 @@ public class ClientFTP {
 		}
 		// close the file here
 		fileInputStream.close();
+	}catch(FileNotFoundException e){
+		System.out.println("File does not exist in the client");
+			dataOutputStream.writeUTF("Fail");
+			// return false;
+	}
 	}
     //get: getting file from server, function starts here
 
@@ -165,8 +177,16 @@ public class ClientFTP {
 				fileName = fileName.substring(fileName.lastIndexOf('/') + 1).trim();
 			}
 		int bytes = 0;
-		FileOutputStream fileOutputStream = new FileOutputStream(fileName);
+		// System.out.println("I am here");
 
+		if (dataInputStream.readUTF().equals("Fail")){
+			System.out.println("File does not exist at server");
+			return;
+		}
+		FileOutputStream fileOutputStream = new FileOutputStream(fileName);
+		// System.out.println("I am after fileoutput stream");
+
+        
 		long size = dataInputStream.readLong(); // read file size
 		byte[] buffer = new byte[4 * 1024];
 		while (size > 0
@@ -182,6 +202,8 @@ public class ClientFTP {
 		System.out.println("File is Received");
 		fileOutputStream.close();
 	}
+
+	
 
 }
 
