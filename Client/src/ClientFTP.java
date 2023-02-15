@@ -1,6 +1,7 @@
 import java.io.*;
 import java.net.ConnectException;
 import java.net.Socket;
+import java.net.SocketException;
 import java.util.Arrays;
 import java.util.Scanner;
 
@@ -135,6 +136,10 @@ public class ClientFTP {
 		catch(ConnectException ce)
 		{
 			System.out.println("Cannot connect to server. The host or port provided is incorrect. Please check and try again");
+		}
+		catch(SocketException se)
+		{
+			System.out.println("Connection to the server lost. Please reconnect.");
 		}
 		catch (Exception e) {
 			e.printStackTrace();

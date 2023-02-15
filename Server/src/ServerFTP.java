@@ -14,6 +14,8 @@ public class ServerFTP {
 		String currentDir = System.getProperty("user.dir");
 		try (ServerSocket serverSocket
 			= new ServerSocket(900)) {
+			while(true)
+			{
 			System.out.println(
 				"Server is Starting in Port 900");
 			// Accept the Client request using accept method
@@ -90,13 +92,11 @@ public class ServerFTP {
 								dataOutputStream.writeBoolean(bool);
 								if(bool){
 									dataOutputStream.writeUTF(getPWD());
-								}
-								
-								
+								}	
 							 }	 
 							 break;
 
-				case "delete":System.out.println("Deleting file...");
+				case "delete"://System.out.println("Deleting file...");
 							  bool = delete(currentDir+"/".concat(command.split(" ")[1]));
 							  System.out.println(bool);
 							  dataOutputStream.writeBoolean(bool);
@@ -108,6 +108,7 @@ public class ServerFTP {
 			}
 			
 		}
+	}
 		catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -120,7 +121,7 @@ public class ServerFTP {
 	{
 		int bytes = 0;
 		if (dataInputStream.readUTF().equals("Fail")){
-			System.out.println("File does not exist at server");
+			System.out.println("File does not exist at client");
 			return;
 		}
 		FileOutputStream fileOutputStream
@@ -187,7 +188,7 @@ public class ServerFTP {
             System.out.println(child);
 			sb.append(child).append(",");
         }
-		System.out.println("length:"+sb.length());
+		//System.out.println("length:"+sb.length());
 		if (sb.length() == 0){
 			System.out.println("No file in present directory");
 			return "No file in present directory";
