@@ -1,37 +1,65 @@
 import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.net.SocketException;
 
 public class ServerFTP {
 
 	private static DataOutputStream dataOutputStream = null;
 	private static DataInputStream dataInputStream = null;
 	public static String initServerDir = System.getProperty("user.dir");
+	
 
 	public static void main(String[] args)
 	{
-		// Here we define Server Socket running on port 900
+
+		// int clientAllowed = 1;//new
+	    // int clientAccepted = 0;//new
+		// boolean serverBusy = false;//new
+		
+		if(args.length<1)
+			{
+				System.out.println("Cannot start the server, port number is needed");
+				System.exit(0);
+			}
+
+
+		// Here we define Server Socket running on port 8080
 		String currentDir = System.getProperty("user.dir");
 		try (ServerSocket serverSocket
-			= new ServerSocket(900)) {
+			= new ServerSocket(Integer.parseInt(args[0]))) { //new addition : backlog
 			while(true)
 			{
-			System.out.println(
-				"Server is Starting in Port 900");
-			// Accept the Client request using accept method
+			System.out.println("Server running on port: "+ args[0]);
+
+				// if (clientAccepted < clientAllowed){}
+				// else{
+				// 	System.out.println("Client limit exceeded");
+
+				// }
+			// if(clientAccepted == clientAllowed){}
+			// listen for incoming requests using accept
 			Socket clientSocket = serverSocket.accept();
+			// clientAccepted = clientAccepted++; //new
 			System.out.println("Connected");
-			dataInputStream = new DataInputStream(
-				clientSocket.getInputStream());
-			dataOutputStream = new DataOutputStream(
-				clientSocket.getOutputStream());
-			// Here we call receiveFile define new for that
-			// file
+			dataInputStream = new DataInputStream(clientSocket.getInputStream());
+			dataOutputStream = new DataOutputStream(clientSocket.getOutputStream());
+
+			// if (clientAccepted != 0){
+			// 	serverBusy = true;
+			// 	dataOutputStream.writeBoolean(serverBusy);
+				
+			// }
 			String command = "";
 			boolean bool = false;
 			while(!(command.equals("quit")))
 			{
-				try{command = dataInputStream.readUTF();}catch(EOFException eof){System.out.println("End of file");} //TODO change
+				try{
+					command = dataInputStream.readUTF();
+				}
+				catch(EOFException eof){
+					System.out.println("End of file");
+				} //TODO change
 				System.out.println(command);
 			switch(command.split(" ")[0])
 			{
@@ -109,9 +137,13 @@ public class ServerFTP {
 			
 		}
 	}
+		catch (SocketException se){
+			System.out.println("connection closed "); // new exception handled 
+		}
 		catch (Exception e) {
 			e.printStackTrace();
 		}
+		
 	}
 
 	//put :  receive file from client, function starts here
@@ -127,19 +159,16 @@ public class ServerFTP {
 		FileOutputStream fileOutputStream
 			= new FileOutputStream(fileName);
 
-		long size
+		long filesize
 			= dataInputStream.readLong(); // read file size
-		byte[] buffer = new byte[4 * 1024];
-		while (size > 0
-			&& (bytes = dataInputStream.read(
-					buffer, 0,
-					(int)Math.min(buffer.length, size)))
-					!= -1) {
-			// Here we write the file using write method
-			fileOutputStream.write(buffer, 0, bytes);
-			size -= bytes; // read upto file size
+		byte[] tmpStorage = new byte[4 * 1024];
+		while (filesize > 0 && 
+			(bytes = dataInputStream.read(tmpStorage, 0,(int)Math.min(tmpStorage.length, filesize)))!= -1) {
+			//writing the file
+			fileOutputStream.write(tmpStorage, 0, bytes);
+			filesize -= bytes; // reading upto file size
 		}
-		// Here we received file
+		// received file successfully
 		System.out.println("File is Received");
 		fileOutputStream.close();
 	}
@@ -154,17 +183,16 @@ public class ServerFTP {
 		File file = new File(path);
 		FileInputStream fileInputStream = new FileInputStream(file);
         dataOutputStream.writeUTF("Pass");
-		// Here we send the File to Client
+		// sending the file to client side
 		dataOutputStream.writeLong(file.length());
-		// Here we break file into chunks
-		byte[] buffer = new byte[4 * 1024];
-		while ((bytes = fileInputStream.read(buffer))
-			!= -1) {
-		// Send the file to Client Socket
-		dataOutputStream.write(buffer, 0, bytes);
+		// breaking the file into byte chunks
+		byte[] tmpStorage = new byte[4 * 1024];
+		while ((bytes = fileInputStream.read(tmpStorage))!= -1) {
+		// sending the file to the client socket
+		dataOutputStream.write(tmpStorage, 0, bytes);
 			dataOutputStream.flush();
 		}
-		// close the file here
+		// closing file
 
 		fileInputStream.close();
 		return true;
@@ -182,7 +210,7 @@ public class ServerFTP {
 	private static String listContent()
 	{
 		File dir = new File(System.getProperty("user.dir"));
-        String childs[] = dir.list();
+        String childs[] = dir.list(); //to get the list of files under the directory
 		StringBuilder sb = new StringBuilder();
         for(String child: childs){
             System.out.println(child);
@@ -204,14 +232,14 @@ public class ServerFTP {
 
 	private static String getPWD(){
 		System.out.println(System.getProperty("user.dir"));
-		return System.getProperty("user.dir");
+		return System.getProperty("user.dir"); //returns present user directory
 	}
 
 	//mkdir: making new directory, function starts here
 
 	private static boolean mkDir(String dirName){
 		File f = new File(dirName);
-		return f.mkdir();
+		return f.mkdir();// making new directory
 	}
 
 	//cd : changing directory, function starts here

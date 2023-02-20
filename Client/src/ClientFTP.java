@@ -12,11 +12,7 @@ public class ClientFTP {
 
 	public static void main(String[] args)
 	{
-		// Ask host and port to connect to from user
 		
-		/*System.out.println("Enter host and port of the server to connect");
-		String host = sc.nextLine();
-		int port = sc.nextInt();*/
 		if(args.length<2)
 			{
 				System.out.println("Cannot connect to the server as localhost or post missing in the arguements");
@@ -31,6 +27,7 @@ public class ClientFTP {
 			String currentUserDir = System.getProperty("user.dir");
 			dataInputStream = new DataInputStream(socket.getInputStream());
 			dataOutputStream = new DataOutputStream(socket.getOutputStream());
+			socket.setSoTimeout(3000); //new
 			dataOutputStream.writeUTF("pwd");
 			String serverCurrentDir = dataInputStream.readUTF();
 			Scanner sc = new Scanner(System.in);
@@ -47,7 +44,7 @@ public class ClientFTP {
 				System.out.println("7. pwd - Fetch present working directory in the remote server ( pwd )\n");
 				System.out.println("8. quit - Close the connection with the remote server ( quit )\n\n");
 				System.out.println("Enter your command to proceed : \n");*/
-				System.out.print("mytftp>");
+				System.out.print("myftp>");
 				usrInput = sc.nextLine();
 				// String splitCommand[] = usrInput.split(" ");
 				boolean bool = false;
@@ -141,6 +138,9 @@ public class ClientFTP {
 		{
 			System.out.println("Connection to the server lost. Please reconnect.");
 		}
+	    catch(IOException ioe){
+			System.out.println("Timeout: Server busy");//new
+		}
 		catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -154,18 +154,17 @@ public class ClientFTP {
 		File file = new File(path);
 		FileInputStream fileInputStream = new FileInputStream(file);
 		dataOutputStream.writeUTF("Pass");
-		// Here we send the File to Server
+		// sending file to server side
 		dataOutputStream.writeLong(file.length());
-		// Here we break file into chunks
-		byte[] buffer = new byte[4 * 1024];
-		while ((bytes = fileInputStream.read(buffer))
-			!= -1) {
-		// Send the file to Server Socket
-		dataOutputStream.write(buffer, 0, bytes);
+		// breaking file into chunks of bytes
+		byte[] tmpStorage = new byte[4 * 1024];
+		while ((bytes = fileInputStream.read(tmpStorage))!= -1) {
+		//sending file to server socket through output stream
+		dataOutputStream.write(tmpStorage, 0, bytes);
 			dataOutputStream.flush();
 		}
 		
-		// close the file here
+		// closing file
 		fileInputStream.close();
 	}catch(FileNotFoundException e){
 		System.out.println("File does not exist in the client");
@@ -191,25 +190,17 @@ public class ClientFTP {
 		}
 		FileOutputStream fileOutputStream = new FileOutputStream(fileName);
 		// System.out.println("I am after fileoutput stream");
-
-        
-		long size = dataInputStream.readLong(); // read file size
-		byte[] buffer = new byte[4 * 1024];
-		while (size > 0
-			&& (bytes = dataInputStream.read(
-					buffer, 0,
-					(int)Math.min(buffer.length, size)))
-					!= -1) {
-			// Here we write the file using write method
-			fileOutputStream.write(buffer, 0, bytes);
-			size -= bytes; // read upto file size
+		long filesize = dataInputStream.readLong(); // read file size
+		byte[] tmpStorage = new byte[4 * 1024];
+		while (filesize > 0 && 
+			(bytes = dataInputStream.read(tmpStorage, 0,(int)Math.min(tmpStorage.length, filesize)))!= -1) {
+			// writing the file using fileoutputstream.write method
+			fileOutputStream.write(tmpStorage, 0, bytes);
+			filesize -= bytes; // reading upto file size
 		}
-		// Here we received file
+		// file received successfully
 		System.out.println("File is Received");
 		fileOutputStream.close();
 	}
-
-	
-
 }
 
